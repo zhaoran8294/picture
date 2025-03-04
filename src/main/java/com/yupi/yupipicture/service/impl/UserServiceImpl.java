@@ -33,14 +33,22 @@ import java.util.stream.Collectors;
 * @description 针对表【user(用户)】的数据库操作Service实现
 * @createDate 2025-02-19 12:09:48
 */
-@Slf4j
 @Service
+@Slf4j
 public class UserServiceImpl extends ServiceImpl<UserMapper, User>
-    implements UserService{
+        implements UserService {
 
+    /**
+     * 用户注册
+     *
+     * @param userAccount   用户账户
+     * @param userPassword  用户密码
+     * @param checkPassword 校验密码
+     * @return
+     */
     @Override
     public long userRegister(String userAccount, String userPassword, String checkPassword) {
-        // 1. 校验
+        // 1. 校验参数
         if (StrUtil.hasBlank(userAccount, userPassword, checkPassword)) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "参数为空");
         }
@@ -53,16 +61,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         if (!userPassword.equals(checkPassword)) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "两次输入的密码不一致");
         }
-        // 2. 检查是否重复
+        // 2. 检查用户账号是否和数据库中已有的重复
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("userAccount", userAccount);
         long count = this.baseMapper.selectCount(queryWrapper);
         if (count > 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "账号重复");
         }
-        // 3. 加密
+        // 3. 密码一定要加密
         String encryptPassword = getEncryptPassword(userPassword);
-        // 4. 插入数据
+        // 4. 插入数据到数据库中
         User user = new User();
         user.setUserAccount(userAccount);
         user.setUserPassword(encryptPassword);
@@ -106,48 +114,54 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     }
 
     /**
-     * 获得加密后的密码
-     * @param userPassword
+     * 获取加密后的密码
+     *
+     * @param userPassword 用户密码
      * @return 加密后的密码
      */
     @Override
-   public String getEncryptPassword(String userPassword){
-        //加盐，混淆密码
+    public String getEncryptPassword(String userPassword) {
+        // 加盐，混淆密码
         final String SALT = "yupi";
         return DigestUtils.md5DigestAsHex((SALT + userPassword).getBytes());
     }
 
     @Override
     public User getLoginUser(HttpServletRequest request) {
-        Object userObj =  request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
+        // 判断是否已经登录
+        Object userObj = request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
         User currentUser = (User) userObj;
-        if (currentUser == null || currentUser.getId() == null){
+        if (currentUser == null || currentUser.getId() == null) {
             throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR);
         }
-        //从数据库中查询
-        Long userId =currentUser.getId();
+        // 从数据库中查询（追求性能的话可以注释，直接返回上述结果）
+        Long userId = currentUser.getId();
         currentUser = this.getById(userId);
-        if (currentUser == null){
-            throw new BusinessException((ErrorCode.NOT_LOGIN_ERROR));
+        if (currentUser == null) {
+            throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR);
         }
         return currentUser;
     }
 
-
     /**
-     * 获得用户脱敏后的信息
+     * 获取脱敏类的用户信息
+     *
      * @param user 用户
-     * @return 脱敏后的信息
+     * @return 脱敏后的用户信息
      */
     @Override
-    public LoginUserVO getLoginUserVO(User user){
+    public LoginUserVO getLoginUserVO(User user) {
+        if (user == null) {
+            return null;
+        }
         LoginUserVO loginUserVO = new LoginUserVO();
-        BeanUtil.copyProperties(user,loginUserVO);
+        BeanUtil.copyProperties(user, loginUserVO);
         return loginUserVO;
     }
 
     /**
-     * 获取脱敏后的用户信息
+     * 获得脱敏后的用户信息
+     *
      * @param user
      * @return
      */
@@ -157,11 +171,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
             return null;
         }
         UserVO userVO = new UserVO();
-        BeanUtils.copyProperties(user, userVO);
+        BeanUtil.copyProperties(user, userVO);
         return userVO;
     }
 
-    /**获取脱敏后的用户列表
+    /**
+     * 获取脱敏后的用户列表
      *
      * @param userList
      * @return
@@ -178,11 +193,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 
     @Override
     public boolean userLogout(HttpServletRequest request) {
-        Object userObj =  request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
-        if (userObj == null ){
-            throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR);
+        // 判断是否已经登录
+        Object userObj = request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
+        if (userObj == null) {
+            throw new BusinessException(ErrorCode.OPERATION_ERROR, "未登录");
         }
-        //移除登陆态
+        // 移除登录态
         request.getSession().removeAttribute(UserConstant.USER_LOGIN_STATE);
         return true;
     }
@@ -193,8 +209,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "请求参数为空");
         }
         Long id = userQueryRequest.getId();
-        String userAccount = userQueryRequest.getUserAccount();
         String userName = userQueryRequest.getUserName();
+        String userAccount = userQueryRequest.getUserAccount();
         String userProfile = userQueryRequest.getUserProfile();
         String userRole = userQueryRequest.getUserRole();
         String sortField = userQueryRequest.getSortField();
@@ -213,10 +229,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     public boolean isAdmin(User user) {
         return user != null && UserRoleEnum.ADMIN.getValue().equals(user.getUserRole());
     }
-
-
 }
-
-
 
 
