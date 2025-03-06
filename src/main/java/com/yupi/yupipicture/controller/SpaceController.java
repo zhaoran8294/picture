@@ -1,6 +1,5 @@
 package com.yupi.yupipicture.controller;
 
-import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.yupi.yupipicture.annotation.AuthCheck;
 import com.yupi.yupipicture.common.BaseResponse;
@@ -10,6 +9,7 @@ import com.yupi.yupipicture.constant.UserConstant;
 import com.yupi.yupipicture.exception.BusinessException;
 import com.yupi.yupipicture.exception.ErrorCode;
 import com.yupi.yupipicture.exception.ThrowUtils;
+import com.yupi.yupipicture.manager.auth.SpaceUserAuthManager;
 import com.yupi.yupipicture.model.dto.space.*;
 import com.yupi.yupipicture.model.entity.Space;
 import com.yupi.yupipicture.model.entity.User;
@@ -19,6 +19,7 @@ import com.yupi.yupipicture.service.SpaceService;
 import com.yupi.yupipicture.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -38,6 +39,9 @@ public class SpaceController {
 
     @Resource
     private SpaceService spaceService;
+
+    @Resource
+    private SpaceUserAuthManager spaceUserAuthManager;
 
     @PostMapping("/add")
     public BaseResponse<Long> addSpace(@RequestBody SpaceAddRequest spaceAddRequest, HttpServletRequest request) {
@@ -120,9 +124,14 @@ public class SpaceController {
         // 查询数据库
         Space space = spaceService.getById(id);
         ThrowUtils.throwIf(space == null, ErrorCode.NOT_FOUND_ERROR);
+        SpaceVO spaceVO = spaceService.getSpaceVO(space, request);
+        User loginUser = userService.getLoginUser(request);
+        List<String> permissionList = spaceUserAuthManager.getPermissionList(space, loginUser);
+        spaceVO.setPermissionList(permissionList);
         // 获取封装类
-        return ResultUtils.success(spaceService.getSpaceVO(space, request));
+        return ResultUtils.success(spaceVO);
     }
+
 
     /**
      * 分页获取图片列表（仅管理员可用）
