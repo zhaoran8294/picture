@@ -11,7 +11,6 @@ import com.yupi.yupipicture.exception.BusinessException;
 import com.yupi.yupipicture.exception.ErrorCode;
 import com.yupi.yupipicture.manager.CosManager;
 import lombok.extern.slf4j.Slf4j;
-import lombok.val;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 

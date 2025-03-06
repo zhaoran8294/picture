@@ -145,7 +145,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         }
         return currentUser;
     }
-
     /**
      * 获取脱敏类的用户信息
      *

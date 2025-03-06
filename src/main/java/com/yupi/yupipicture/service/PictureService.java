@@ -3,6 +3,7 @@ package com.yupi.yupipicture.service;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.yupi.yupipicture.api.aliyunai.model.CreateOutPaintingTaskResponse;
 import com.yupi.yupipicture.model.dto.picture.*;
 import com.yupi.yupipicture.model.dto.user.UserQueryRequest;
 import com.yupi.yupipicture.model.entity.Picture;
@@ -110,4 +111,6 @@ public interface PictureService extends IService<Picture> {
      * @param picture
      */
     void checkPictureAuth(User loginUser,Picture picture);
+
+    CreateOutPaintingTaskResponse createPictureOutPaintingTask(CreatePictureOutPaintingTaskRequest createPictureOutPaintingTaskRequest, User loginUser);
 }

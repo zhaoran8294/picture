@@ -50,6 +50,9 @@ knife4j:
           - com.yupi.yupipicture.controller
 
 
+# 阿里云 AI 配置
+aliYunAi:
+  apiKey: sk-faab3cbf68844b54b5e8763333060570
 
 
 ## 对象存储配置（需要从腾讯云获取）
@@ -62,3 +65,6 @@ knife4j:
 #    bucket: xxx
 #
 
+# 阿里云 AI 配置
+#aliYunAi:
+ # apiKey: xxxx
